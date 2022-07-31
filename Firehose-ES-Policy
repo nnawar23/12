@@ -1,0 +1,97 @@
+{
+    "Version": "2012-10-17",  
+    "Statement": [    
+        {      
+            "Effect": "Allow",      
+            "Action": [
+                "s3:AbortMultipartUpload",
+                "s3:GetBucketLocation",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:ListBucketMultipartUploads",
+                "s3:PutObject"
+            ],      
+            "Resource": [        
+                "arn:aws:s3:::${DestBucketNameFireHose}",
+                "arn:aws:s3:::${DestBucketNameFireHose}/*"		    
+            ]    
+        },
+        {
+           "Effect": "Allow",
+           "Action": [
+               "kms:Decrypt",
+               "kms:GenerateDataKey"
+           ],
+           "Resource": [
+               "arn:aws:kms:region:${AWS::AccountId}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"           
+           ],
+           "Condition": {
+               "StringEquals": {
+                   "kms:ViaService": "s3.region.amazonaws.com":"arn:aws:s3:::${DestBucketNameFireHose}*"
+               },
+               "StringLike": {
+                   "kms:EncryptionContext:aws:s3:arn":
+               }
+           }
+        },
+        {
+           "Effect": "Allow",
+           "Action": [
+               "es:DescribeDomain",
+               "es:DescribeDomains",
+               "es:DescribeDomainConfig",
+               "es:ESHttpPost",
+               "es:ESHttpPut"
+           ],
+          "Resource": [
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/*"
+          ]
+       },
+       {
+          "Effect": "Allow",
+          "Action": [
+              "es:ESHttpGet"
+          ],
+          "Resource": [
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/_all/_settings",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/_cluster/stats",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/${IndexName}*/_mapping/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/_nodes",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/_nodes/stats",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/_nodes/*/stats",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/_stats",
+              "arn:aws:es:region:${AWS::AccountId}:domain/${DestOpenSearchFireHose}/${IndexName}*/_stats"
+          ]
+       },        
+       {
+          "Effect": "Allow",
+          "Action": [
+              "kinesis:DescribeStream",
+              "kinesis:GetShardIterator",
+              "kinesis:GetRecords",
+              "kinesis:ListShards"
+          ],
+          "Resource": "arn:aws:kinesis:region:${AWS::AccountId}:stream/${DeliveryStreamName}"
+       },
+       {
+          "Effect": "Allow",
+          "Action": [
+              "logs:PutLogEvents"
+          ],
+          "Resource": [
+              "arn:aws:logs:region::${AWS::AccountId}:log-group:${DeliveryStreamName}-${Environment}-LogGroup:log-stream:log-stream:${DeliveryStreamName}-${Environment}-LogStream"
+          ]
+       },
+       {
+          "Effect": "Allow", 
+          "Action": [
+              "lambda:InvokeFunction", 
+              "lambda:GetFunctionConfiguration" 
+          ],
+          "Resource": [
+              "arn:aws:lambda:region:${AWS::AccountId}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+          ]
+       }
+    ]
+}
